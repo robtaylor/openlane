@@ -14,33 +14,18 @@
 
 OPENLANE_DIR ?= $(shell pwd)
 
-PDK_ROOT ?= $(shell pwd)/pdks
-
-ifeq (, $(strip $(NPROC)))
-  # Linux (utility program)
-  NPROC := $(shell nproc 2>/dev/null)
-
-  ifeq (, $(strip $(NPROC)))
-    # Linux (generic)
-    NPROC := $(shell grep -c ^processor /proc/cpuinfo 2>/dev/null)
-  endif
-  ifeq (, $(strip $(NPROC)))
-    # BSD (at least FreeBSD and Mac OSX)
-    NPROC := $(shell sysctl -n hw.ncpu 2>/dev/null)
-  endif
-  ifeq (, $(strip $(NPROC)))
-    # Fallback
-    NPROC := 1
-  endif
-
-endif
+include nproc.mk
 
 THREADS ?= $(NPROC)
 STD_CELL_LIBRARY ?= sky130_fd_sc_hd
 SPECIAL_VOLTAGE_LIBRARY ?= sky130_fd_sc_hvl
 IO_LIBRARY ?= sky130_fd_io
 
-IMAGE_NAME ?= efabless/openlane:rc7
+CACHE_DOCKER_ID ?= efabless
+DOCKER_ID ?= $(CACHE_DOCKER_ID)
+IMAGE_NAME ?= $(DOCKER_ID)/openlane:rc7
+BUILD_ARCH ?= linux/amd64,linux/arm64
+
 TEST_DESIGN ?= spm
 BENCHMARK ?= regression_results/benchmark_results/SW_HD.csv
 REGRESSION_TAG ?= TEST_SW_HD
@@ -48,6 +33,8 @@ PRINT_REM_DESIGNS_TIME ?= 0
 
 SKYWATER_COMMIT ?= f6f76f3dc99526c6fc2cfede19b5b1227d4ebde7
 OPEN_PDKS_COMMIT ?= ec43817ed9f58ff83c9d260ce981818023cb6d77
+
+export CACHE_DOCKER_ID DOCKER_ID IMAGE_NAME BUILD_ARCH
 
 ifndef PDK_ROOT
 $(error PDK_ROOT is undefined, please export it before running make)
@@ -120,7 +107,7 @@ build-pdk: $(PDK_ROOT)/open_pdks $(PDK_ROOT)/skywater-pdk
 		rm -rf $(PDK_ROOT)/sky130A) || \
 		true
 	docker run -it -v $(OPENLANE_DIR):/openLANE_flow -v $(PDK_ROOT):$(PDK_ROOT) -e PDK_ROOT=$(PDK_ROOT) -u $(shell id -u $(USER)):$(shell id -g $(USER)) $(IMAGE_NAME) sh -c " cd $(PDK_ROOT)/open_pdks && \
-		./configure --enable-sky130-pdk=$(PDK_ROOT)/skywater-pdk/libraries --with-sky130-local-path=$(PDK_ROOT) && \
+		./configure --with-sky130-source=$(PDK_ROOT)/skywater-pdk/libraries --with-sky130-local-path=$(PDK_ROOT) && \
 		cd sky130 && \
 		make veryclean && \
 		make && \
@@ -139,7 +126,9 @@ native-build-pdk: $(PDK_ROOT)/open_pdks $(PDK_ROOT)/skywater-pdk
 		cd sky130 && \
 		$(MAKE) veryclean && \
 		$(MAKE) && \
-		$(MAKE) install-local
+		$(MAKE) install-local && \
+		touch $(PDK_ROOT)/sky130A/SOURCES && \
+		echo 'Built by: OpenLANE rc7 Makefile\n Skywater Commit: $(SKYWATER_COMMIT)\n open_pdks Commit: $(OPEN_PDKS_COMMIT)' > $(PDK_ROOT)/sky130A/SOURCES
 
 gen-sources: $(PDK_ROOT)/sky130A
 	touch $(PDK_ROOT)/sky130A/SOURCES
@@ -152,9 +141,15 @@ gen-sources: $(PDK_ROOT)/sky130A
 	cd $(PDK_ROOT)/open_pdks && git rev-parse HEAD >> $(PDK_ROOT)/sky130A/SOURCES
 
 ### OPENLANE
+
 .PHONY: openlane
 openlane:
 	docker pull $(IMAGE_NAME)
+	$(MAKE) -C docker openlane 
+
+.PHONY: docker-cache
+docker-cache:
+	$(MAKE) -C docker cache
 
 .PHONY: mount
 mount:
