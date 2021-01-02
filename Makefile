@@ -121,9 +121,9 @@ build-pdk: $(PDK_ROOT)/open_pdks $(PDK_ROOT)/skywater-pdk
 	docker run -it -v $(OPENLANE_DIR):/openLANE_flow -v $(PDK_ROOT):$(PDK_ROOT) -e PDK_ROOT=$(PDK_ROOT) -u $(shell id -u $(USER)):$(shell id -g $(USER)) $(IMAGE_NAME) sh -c " cd $(PDK_ROOT)/open_pdks && \
 		./configure --enable-sky130-pdk=$(PDK_ROOT)/skywater-pdk/libraries --with-sky130-local-path=$(PDK_ROOT) && \
 		cd sky130 && \
-		$(MAKE) veryclean && \
-		$(MAKE) && \
-		$(MAKE) install-local && \
+		make veryclean && \
+		make && \
+		make install-local && \
 		touch $(PDK_ROOT)/sky130A/SOURCES && \
 		echo 'Built by: OpenLANE rc7 Makefile\n Skywater Commit: $(SKYWATER_COMMIT)\n open_pdks Commit: $(OPEN_PDKS_COMMIT)' > $(PDK_ROOT)/sky130A/SOURCES"
 

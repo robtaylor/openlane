@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # syntax = docker/dockerfile:1.0-experimental
-FROM centos:centos7 as build
+FROM centos:centos7 as antmicro_yosys
 
 RUN yum groupinstall -y "Development Tools"
 RUN yum -y install centos-release-scl && \
@@ -34,9 +34,8 @@ ENV CC=/opt/rh/devtoolset-8/root/usr/bin/gcc \
 
 
 
-RUN yum install -y https://repo.ius.io/ius-release-el7.rpm
-RUN yum install -y python36u python36u-pip
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 60
+RUN yum install -y epel-release && \
+    yum install -y python36
 
 
 #ENV CC=/opt/rh/devtoolset-6/root/usr/bin/gcc \
@@ -76,4 +75,4 @@ RUN make PREFIX=/build/antmicro config-gcc \
 RUN mkdir -p /build/version
 RUN date +"Build Timestamp: %Y-%m-%d_%H-%M-%S" > /build/version/yosys.version
 RUN git rev-parse HEAD >> /build/version/yosys.version
-RUN tar -czf /build.tar.gz /build
+RUN tar -czf /yosys-antmicro.tar.gz /build

@@ -2,6 +2,7 @@
 DOCKER_BUILD_OPTS ?= --rm
 DOCKERFILE_PATH ?= ./Dockerfile
 IMAGE_NAME ?= openlane:rc7
+ARCH=$(shell arch)
 #ROOT = sudo
 
 TOOLS = replace opendp route opensta yosys antmicro_yosys magic openroad_app padring netgen vlogtoverilog openphysyn cvc
@@ -16,7 +17,8 @@ build-all: $(TOOL_BUILD_TARGETS) export-all
 
 $(TOOL_BUILD_TARGETS): build-% : ./docker/%/Dockerfile
 	mkdir -p logs/docker
-	docker build $(DOCKER_BUILD_OPTS) -t $* docker/$* | tee logs/docker/$*.build.txt
+	docker buildx create --use
+	docker buildx build --platform linux/arm64,linux/amd64 $(DOCKER_BUILD_OPTS) -t $* --push docker/$* | tee logs/docker/$*.build.txt
 	${MAKE} export-$*
 
 # ==============================================================================
@@ -63,3 +65,7 @@ endif
 clean_export: 
 	rm -rf export/*.tar.gz
 
+clean-all:
+	rm -rf $(TOOL_EXPORT_TARGETS_REAL)
+	rm -rf $(TOOL_EXPORT_TARGETS_PHONY)
+	rm -rf $(TOOL_BUILD_TARGETS)
