@@ -25,11 +25,8 @@ include comma-seperate.mk
 TOOLS = base boost_base replace opendp route_14 opensta yosys antmicro_yosys magic openroad_app padring netgen vlog2verilog openphysyn cvc
 
 TOOL_BUILD_TARGETS := $(foreach tool,$(TOOLS),build-$(tool))
-tool_cache = $(foreach tool,$(TOOLS),--cache-from type=registry,ref=$(tool)$1)
-TOOL_CACHES := $(call tool_cache,)
+TOOL_CACHES = $(foreach tool,$(TOOLS),--cache-from type=registry,ref=$(tool):buildcache)
 MULTIARCH = $(call comma-separate,$(BUILD_ARCHS))
-
-TOOL_ARCH_CACHES = $(foreach arch,$(BUILD_ARCHS),$(call tool_cache,:$arch))
 
 .PHONY: cache build-all
 cache: build-all
@@ -50,13 +47,12 @@ $(TOOL_BUILD_TARGETS): build-% : Dockerfile docker-builder
 	@mkdir -p ../logs/docker
 	@rm -rf ../logs/docker/$*.build.txt
 
-	# Loop over the architectures sepeartely to avoid potential out of memory issues (Some sort of buildx bug?)
+	# Loop over the architectures sepeartely to avoid potential out of memory issues (Some sort of buildx bug?), then do a final assembly, storing intermediate caches toa local cache for speed
+	tmpdir=$$(mktemp -d) ; \
 	for i in $(BUILD_ARCH); do \
-		docker buildx build --push --platform $i -t $(CACHE_DOCKER_ID)/$*:$i --cache-from type=registry,ref=$(CACHE_DOCKER_ID)/*:$i --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS) --target $* --progress plain . 2>&1 | tee -a ../logs/docker/$*.build.txt; \
-	done
-
-	#Final multiarch image assembly
-	docker buildx build --push --platform $(MULTIARCH) -t $(CACHE_DOCKER_ID)/$* $(TOOL_ARCH_CACHES) --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS) --target $* --progress plain . 2>&1 | tee ../logs/docker/$*.build.txt
-
+		docker buildx build --load --platform $$i -t $(CACHE_DOCKER_ID)/$*:$$i --cache-from type=registry,ref=$(CACHE_DOCKER_ID)/$*:buildcache --cache-to type=local,dest=$$tmpdir,mode=max $(BUILDX_OPTIONS) --target $* --progress plain . 2>&1 | tee -a ../logs/docker/$*.build.txt; \
+	done ; \
+	docker buildx build --push --platform $(MULTIARCH) -t $(CACHE_DOCKER_ID)/$* --cache-from type=local,src=$$tmpdir --cache-to type=registry,ref=$(CACHE_DOCKER_ID)/$*:buildcache,mode=max  $(BUILDX_OPTIONS) --target $* --progress plain . 2>&1 | tee ../logs/docker/$*.build.txt ; \
+	rm -rf $$tmpdir
 
 
