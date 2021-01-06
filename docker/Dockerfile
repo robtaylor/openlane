@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# syntax = docker/dockerfile:1.0-experimental
+# syntax = ocker/dockerfile:1.0-experimental
 FROM centos:centos7 as base
 
 RUN yum install -y epel-release centos-release-scl
@@ -81,7 +81,7 @@ RUN git clone https://github.com/antmicro/yosys yosys && \
 
 WORKDIR yosys
 RUN make PREFIX=/build/antmicro config-gcc && \
-    make PREFIX=/build/antmicro -j$(nproc) && \
+    make PREFIX=/build/antmicro  && \
     make PREFIX=/build/antmicro install
 
 RUN /stamp.sh antmicro_yosys
@@ -92,7 +92,7 @@ FROM base AS cvc
 
 RUN pip3 install pyinstaller
 
-COPY docker/cvc/cvc-1.0.0.tar.gz cvc-1.0.0.tar.gz
+COPY cvc/cvc-1.0.0.tar.gz cvc-1.0.0.tar.gz
 RUN tar -xvf cvc-1.0.0.tar.gz
 WORKDIR cvc-1.0.0
 RUN ./configure --disable-nls --prefix=/build && \
@@ -146,13 +146,13 @@ RUN /stamp.sh opendp
 ################# Boost and SWIG ###################
 FROM base AS boost_base
 
-RUN wget https://sourceforge.net/projects/boost/files/boost/1.72.0/boost_1_72_0.tar.bz2/download
-RUN tar -xf download && \
-    cd boost_1_72_0 && \
+RUN wget https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2
+RUN tar -xf /boost_1_75_0.tar.bz2 && \
+    cd boost_1_75_0 && \
     ./bootstrap.sh && \
     ./b2 install --with-iostreams --with-test link=shared -j $(nproc) && \
     cd .. && \
-    rm -rf boost_1_72.0
+    rm -rf boost_1_75.0
 
 RUN wget https://github.com/swig/swig/archive/rel-4.0.1.tar.gz
 RUN tar xfz rel-4.0.1.tar.gz \
@@ -174,13 +174,15 @@ RUN git clone --recursive https://github.com/scale-lab/OpenPhySyn.git && \
 
 WORKDIR OpenPhySyn
 RUN mkdir build && \
-    mkdir /build && \
-    cd build && \
+    mkdir /build
+
+RUN cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=release && \
     make -j 4 && \
-    make install && \
-    mkdir /build/bin && \
-    cp build/Psn /build/bin/
+    make install 
+
+RUN mkdir /build/bin && \
+    cp /usr/local/bin/Psn /build/bin/
 
 RUN /stamp.sh openphysyn
 
@@ -206,16 +208,16 @@ WORKDIR /OpenROAD_23112020/
 RUN git checkout d03ebfc2447b674583b77d94d0891e4c3bc6b1a2 \
     && git submodule update --init --recursive
 
-COPY docker/openroad_app/rails.patch /OpenROAD_23112020/
+COPY openroad_app/rails.patch /OpenROAD_23112020/
 RUN git apply rails.patch
 
-COPY docker/openroad_app/setup_local.patch /OpenROAD_23112020/src/OpenDB/src/swig/python
+COPY openroad_app/setup_local.patch /OpenROAD_23112020/src/OpenDB/src/swig/python
 RUN cd /OpenROAD_23112020/src/OpenDB/src/swig/python && git apply setup_local.patch
 
-COPY docker/openroad_app/pdngen_export_subst.patch /OpenROAD_23112020/
+COPY openroad_app/pdngen_export_subst.patch /OpenROAD_23112020/
 RUN git apply pdngen_export_subst.patch
 
-COPY docker/openroad_app/ignore_obs_outside.patch /OpenROAD_23112020/
+COPY openroad_app/ignore_obs_outside.patch /OpenROAD_23112020/
 RUN git apply ignore_obs_outside.patch
 
 # Build OpenROAD
@@ -359,7 +361,7 @@ RUN make PREFIX=/build config-gcc \
  && make PREFIX=/build -j$(nproc) \
  && make PREFIX=/build install
 
-RUN ./stamp.sh yosys
+RUN /stamp.sh yosys
 
 ############## combined tools image #################
 FROM base AS tools
@@ -404,15 +406,14 @@ RUN pip3 install --no-cache-dir Cython & \
 
 ENV OPENLANE_ROOT=/openLANE_flow
 ENV OPENROAD=/build/
-ENV OPENROADOS=Linux-x86_64
 
 ENV PATH=$OPENLANE_ROOT:$OPENLANE_ROOT/scripts:$OPENROAD/bin:$OPENROAD/bin/Linux-x86_64:$OPENROAD/pdn/scripts:$PATH
-ENV LD_LIBRARY_PATH=$OPENROAD/lib:$OPENROAD/lib/Linux-x86_64:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$OPENROAD/lib:$LD_LIBRARY_PATH
 ENV MANPATH=$OPENROAD/share/man:$MANPATH
-
 
 COPY tclshrc /.tclshrc
 RUN cp /.tclshrc /root
+COPY .. $OPENLANE_ROOT
 
 # install opendb python
 RUN cd $OPENROAD/OpenDB_python/ && \

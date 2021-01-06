@@ -12,33 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include nproc.mk
+
 OPENLANE_DIR ?= $(shell pwd)
-
-ifeq (, $(strip $(NPROC)))
-  # Linux (utility program)
-  NPROC := $(shell nproc 2>/dev/null)
-
-  ifeq (, $(strip $(NPROC)))
-    # Linux (generic)
-    NPROC := $(shell grep -c ^processor /proc/cpuinfo 2>/dev/null)
-  endif
-  ifeq (, $(strip $(NPROC)))
-    # BSD (at least FreeBSD and Mac OSX)
-    NPROC := $(shell sysctl -n hw.ncpu 2>/dev/null)
-  endif
-  ifeq (, $(strip $(NPROC)))
-    # Fallback
-    NPROC := 1
-  endif
-
-endif
 
 THREADS ?= $(NPROC)
 STD_CELL_LIBRARY ?= sky130_fd_sc_hd
 SPECIAL_VOLTAGE_LIBRARY ?= sky130_fd_sc_hvl
 IO_LIBRARY ?= sky130_fd_io
 
-IMAGE_NAME ?= openlane:rc7
+CACHE_DOCKER_ID ?= efabless
+DOCKER_ID ?= $(CACHE_DOCKER_ID)
+IMAGE_NAME ?= $(DOCKER_ID)/openlane:rc7
+BUILD_ARCH ?= linux/amd64,linux/arm64
+
 TEST_DESIGN ?= spm
 BENCHMARK ?= regression_results/benchmark_results/SW_HD.csv
 REGRESSION_TAG ?= TEST_SW_HD
@@ -46,6 +33,8 @@ PRINT_REM_DESIGNS_TIME ?= 0
 
 SKYWATER_COMMIT ?= 3d7617a1acb92ea883539bcf22a632d6361a5de4
 OPEN_PDKS_COMMIT ?= debc0a49b00d93416e0efd82f26f7604ae1e7a3a
+
+export CACHE_DOCKER_ID DOCKER_ID IMAGE_NAME BUILD_ARCH
 
 ifndef PDK_ROOT
 $(error PDK_ROOT is undefined, please export it before running make)
@@ -144,10 +133,14 @@ native-build-pdk: $(PDK_ROOT)/open_pdks $(PDK_ROOT)/skywater-pdk
 		echo 'Built by: OpenLANE rc7 Makefile\n Skywater Commit: $(SKYWATER_COMMIT)\n open_pdks Commit: $(OPEN_PDKS_COMMIT)' > $(PDK_ROOT)/sky130A/SOURCES
 
 ### OPENLANE
+
 .PHONY: openlane
 openlane:
-	cd $(OPENLANE_DIR)/docker_build && \
-		$(MAKE) merge
+	$(MAKE) -C docker openlane 
+
+.PHONY: docker-cache
+docker-cache:
+	$(MAKE) -C docker cache
 
 .PHONY: regression
 regression:
