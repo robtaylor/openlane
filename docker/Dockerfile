@@ -78,13 +78,13 @@ COPY stamp.sh /
 ################# Boost and SWIG ###################
 FROM base AS boost_base
 
-RUN wget https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2
-RUN tar -xf /boost_1_75_0.tar.bz2 && \
-    cd boost_1_75_0 && \
+RUN wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.bz2
+RUN tar -xf /boost_1_72_0.tar.bz2 && \
+    cd boost_1_72_0 && \
     ./bootstrap.sh && \
     ./b2 install --with-iostreams --with-test link=shared -j $(nproc) && \
     cd .. && \
-    rm -rf boost_1_75.0
+    rm -rf boost_1_72.0
 
 RUN wget https://github.com/swig/swig/archive/rel-4.0.1.tar.gz
 RUN tar xfz rel-4.0.1.tar.gz \
