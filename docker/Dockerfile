@@ -106,7 +106,7 @@ RUN git clone https://github.com/antmicro/yosys yosys && \
 
 WORKDIR yosys
 RUN make PREFIX=/build/antmicro config-gcc && \
-    make PREFIX=/build/antmicro  && \
+    make PREFIX=/build/antmicro -j 2  && \
     make PREFIX=/build/antmicro install
 
 RUN /stamp.sh antmicro_yosys
@@ -361,7 +361,7 @@ RUN mkdir TritonRoute_26102020/build
 WORKDIR TritonRoute_26102020/build
 
 RUN cmake ../ && \
-    make -j$(nproc) && \
+    make -j 2 && \
     mkdir -p /build/bin/ && \
     cp TritonRoute /build/bin/TritonRoute
 
@@ -395,7 +395,7 @@ RUN git clone https://github.com/YosysHQ/yosys yosys && \
 WORKDIR yosys
 
 RUN make PREFIX=/build config-gcc \
- && make PREFIX=/build -j$(nproc) \
+ && make PREFIX=/build -j 2 \
  && make PREFIX=/build install
 
 RUN /stamp.sh yosys
