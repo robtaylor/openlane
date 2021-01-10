@@ -17,7 +17,7 @@
 
 FROM centos:centos8 as base
 
-RUN yum -y install dnf-plugins-core epel-release
+RUN yum -y install dnf-plugins-core epel-release centos-release-stream
 RUN yum config-manager --set-enabled powertools
 
 RUN yum -y install \
