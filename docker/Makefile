@@ -20,9 +20,12 @@ IMAGE_NAME ?= $(DOCKER_ID)/openlane:rc7
 TARGET_ARCHS ?= amd64 arm64
 BUILDX_OPTIONS ?=
 CROSS_BUILD ?=
-HOST_ARCH ?= $(shell arch)
+HOST_ARCH ?= $(shell uname -m)
 CACHE_DIR = $(ROOT_DIR)/docker-cache
 
+ifeq ($(HOST_ARCH),x86_64)
+  HOST_ARCH = amd64
+endif 
 
 include comma-seperate.mk
 
