@@ -43,6 +43,7 @@ RUN yum -y install \
         make \
         ninja-build \
         libX11-devel \
+	libarchive \
         libffi-devel \
         libstdc++ \
         ncurses-devel \
