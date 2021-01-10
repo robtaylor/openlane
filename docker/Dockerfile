@@ -349,7 +349,7 @@ RUN mkdir TritonRoute_26102020/build
 WORKDIR TritonRoute_26102020/build
 
 RUN cmake ../ && \
-    make -j 2 && \
+    make && \
     mkdir -p /build/bin/ && \
     cp TritonRoute /build/bin/TritonRoute
 
