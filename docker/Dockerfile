@@ -15,9 +15,11 @@
 
 # syntax = docker/dockerfile:1.0-experimental
 
-FROM centos:centos7 as base
+FROM centos:centos8 as base
 
-RUN yum install -y epel-release centos-release-scl
+RUN yum -y install dnf-plugins-core epel-release
+RUN yum config-manager --set-enabled powertools
+
 RUN yum -y install \
         autoconf \
         automake \
@@ -26,16 +28,14 @@ RUN yum -y install \
         byacc \
         bzip2 \
         cairo-devel \
-        cmake3 \
+        cmake \
         csh \
         curl \
-        devtoolset-8-dockerfiles \
-        devtoolset-8-gcc \
-        devtoolset-8-gcc-c++ \
-        devtoolset-8-libatomic-devel \
+        gcc \
+        gcc-c++ \
         flex \
         gawk \
-	gdb \
+        gdb \
         gettext \
         git \
         graphviz \
@@ -49,29 +49,16 @@ RUN yum -y install \
         pcre-devel \
         python36 \
         python36-devel \
-        python36-tkinter \
         readline-devel \
-	strace \
+        strace \
         tcl \
         tcl-devel \
         tk \
         tk-devel \
         wget \
-        xdot \
         zlib-devel
 RUN yum -y clean all
 
-ENV CC=/opt/rh/devtoolset-8/root/usr/bin/gcc \
-    CPP=/opt/rh/devtoolset-8/root/usr/bin/cpp \
-    CXX=/opt/rh/devtoolset-8/root/usr/bin/g++ \
-    PATH=/opt/rh/devtoolset-8/root/usr/bin:$PATH \
-    LD_LIBRARY_PATH=/opt/rh/devtoolset-8/root/usr/lib64:/opt/rh/devtoolset-8/root/usr/lib:/opt/rh/devtoolset-8/root/usr/lib64/dyninst:/opt/rh/devtoolset-8/root/usr/lib/dyninst:/opt/rh/devtoolset-8/root/usr/lib64:/opt/rh/devtoolset-8/root/usr/lib:$LD_LIBRARY_PATH
-
-ENV BASH_ENV=/opt/app-root/etc/scl_enable \
-    ENV=/opt/app-root/etc/scl_enable \
-    PROMPT_COMMAND=". /opt/app-root/etc/scl_enable"
-
-RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 COPY stamp.sh /
 
 
