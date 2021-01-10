@@ -52,6 +52,7 @@ RUN yum -y install \
         python36-devel \
         readline-devel \
         strace \
+        swig \
         tcl \
         tcl-devel \
         tk \
@@ -74,15 +75,15 @@ RUN tar -xf /boost_1_72_0.tar.bz2 && \
     cd .. && \
     rm -rf boost_1_72.0
 
-RUN wget https://github.com/swig/swig/archive/rel-4.0.1.tar.gz
-RUN tar xfz rel-4.0.1.tar.gz \
-    && rm -rf rel-4.0.1.tar.gz \
-    && cd swig-rel-4.0.1 \
-    && ./autogen.sh \
-    && ./configure --prefix=/usr && make -j $(nproc) \
-    && make install \
-    && cd .. \
-    && rm -rf swig-rel-4.0.1
+#RUN wget https://github.com/swig/swig/archive/rel-4.0.1.tar.gz
+#RUN tar xfz rel-4.0.1.tar.gz \
+#    && rm -rf rel-4.0.1.tar.gz \
+#    && cd swig-rel-4.0.1 \
+#    && ./autogen.sh \
+#    && ./configure --prefix=/usr && make -j $(nproc) \
+#    && make install \
+#    && cd .. \
+#    && rm -rf swig-rel-4.0.1
 
 
 ######### Antmicro's Yosys staging tree ###########
