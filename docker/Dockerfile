@@ -17,8 +17,9 @@
 
 FROM centos:centos8 as base
 
-RUN yum -y install dnf-plugins-core epel-release centos-release-stream
+RUN yum -y install dnf-plugins-core centos-release-stream
 RUN yum config-manager --set-enabled powertools
+RUN yum install -y epel-release
 
 RUN yum -y install \
         autoconf \
@@ -31,8 +32,9 @@ RUN yum -y install \
         cmake \
         csh \
         curl \
-        gcc \
-        gcc-c++ \
+	diffutils \
+        gcc-8.3.1-5.1.el8 \
+        gcc-c++-8.3.1-5.1.el8 \
         flex \
         gawk \
         gdb \
@@ -40,12 +42,12 @@ RUN yum -y install \
         git \
         graphviz \
         libtool-ltdl \
+	libstdc++-static \
         make \
         ninja-build \
         libX11-devel \
 	libarchive \
         libffi-devel \
-        libstdc++ \
         ncurses-devel \
         pcre-devel \
         python36 \
@@ -194,16 +196,21 @@ FROM boost_base AS openphysyn
 
 RUN git clone https://github.com/scale-lab/OpenPhySyn.git && \
     cd OpenPhySyn && \
-    git checkout 6bb80c5f9312a302b7c29cf1a4ddb93ace47d122  && \
+    git checkout 6bb80c5f9312a302b7c29cf1a4ddb93ace47d122 && \
     git submodule update --init --recursive
 
 WORKDIR OpenPhySyn
+COPY docker/openphysyn/*.patch .
+RUN cd external/OpenDB && git apply ../../opendb.cmake.patch
+RUN cd external/OpenSTA/ && git apply ../../opensta.cmake.patch
+
+
 RUN mkdir build && \
     mkdir /build
 
 RUN cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=release && \
-    make -j 4 && \
+    make -j $(nproc) && \
     make install 
 
 RUN mkdir /build/bin && \
