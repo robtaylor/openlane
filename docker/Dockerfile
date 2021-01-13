@@ -61,7 +61,7 @@ RUN yum -y install \
         zlib-devel
 RUN yum -y clean all
 
-COPY stamp.sh /
+COPY docker/stamp.sh /
 
 
 ################# Boost and SWIG ###################
@@ -137,7 +137,7 @@ FROM base AS cvc
 
 RUN pip3 install pyinstaller
 
-COPY cvc/cvc-1.0.0.tar.gz cvc-1.0.0.tar.gz
+COPY docker/cvc/cvc-1.0.0.tar.gz cvc-1.0.0.tar.gz
 RUN tar -xvf cvc-1.0.0.tar.gz
 WORKDIR cvc-1.0.0
 RUN ./configure --disable-nls --prefix=/build && \
@@ -233,16 +233,16 @@ WORKDIR /OpenROAD_23112020/
 RUN git checkout d03ebfc2447b674583b77d94d0891e4c3bc6b1a2 && \
     git submodule update --init --recursive
 
-COPY openroad_app/rails.patch /OpenROAD_23112020/
+COPY docker/openroad_app/rails.patch /OpenROAD_23112020/
 RUN git apply rails.patch
 
-COPY openroad_app/setup_local.patch /OpenROAD_23112020/src/OpenDB/src/swig/python
+COPY docker/openroad_app/setup_local.patch /OpenROAD_23112020/src/OpenDB/src/swig/python
 RUN cd /OpenROAD_23112020/src/OpenDB/src/swig/python && git apply setup_local.patch
 
-COPY openroad_app/pdngen_export_subst.patch /OpenROAD_23112020/
+COPY docker/openroad_app/pdngen_export_subst.patch /OpenROAD_23112020/
 RUN git apply pdngen_export_subst.patch
 
-COPY openroad_app/ignore_obs_outside.patch /OpenROAD_23112020/
+COPY docker/openroad_app/ignore_obs_outside.patch /OpenROAD_23112020/
 RUN git apply ignore_obs_outside.patch
 
 # Build OpenROAD
@@ -454,9 +454,9 @@ ENV PATH=$OPENLANE_ROOT:$OPENLANE_ROOT/scripts:$OPENROAD/bin:$OPENROAD/bin/Linux
 ENV LD_LIBRARY_PATH=$OPENROAD/lib:$LD_LIBRARY_PATH
 ENV MANPATH=$OPENROAD/share/man:$MANPATH
 
-COPY tclshrc /.tclshrc
+COPY docker/tclshrc /.tclshrc
 RUN cp /.tclshrc /root
-COPY .. $OPENLANE_ROOT
+COPY . $OPENLANE_ROOT
 
 # install opendb python
 RUN cd $OPENROAD/OpenDB_python/ && \

@@ -83,19 +83,19 @@ docker-builder:
 $(TOOL_BUILD_TARGETS): build-% : Dockerfile docker-builder
 	@mkdir -p ../logs/docker
 	@rm -rf ../logs/docker/$*.build.txt
-	build="$*" ;\
+	build="$*" ; \
 	target="$${build%-*}" ; \
 	arch="$${build#*-}" ; \
-	docker buildx build --platform linux/$$arch --cache-from "type=local,src=$(CACHE_DIR)" --cache-to "type=local,dest=$(CACHE_DIR),mode=max" --target $$target -t $(CACHE_ID)/openlane-$$build . 
+	docker buildx build --platform linux/$$arch --cache-from "type=local,src=$(CACHE_DIR)" --cache-to "type=local,dest=$(CACHE_DIR),mode=max" --target $$target -t $(CACHE_ID)/openlane-$$build -f Dockerfile --progress plain  .. 2>&1 | tee ../logs/docker/$*.build.txt
 
 
 $(TOOL_PUSH_TARGETS): push-% : Dockerfile docker-builder
 	@mkdir -p ../logs/docker
 	@rm -rf ../logs/docker/$*.build.txt
-	build="$*" ;\
+	build="$*" ; \
 	target="$${build%-*}" ; \
 	arch="$${build#*-}" ; \
-	docker buildx build --platform linux/$$arch --cache-from "type=local,src=$(CACHE_DIR)" --build-arg  BUILDKIT_INLINE_CACHE=1 --target=$$target -t $(CACHE_ID)/openlane-$$build --push . 
+	docker buildx build --platform linux/$$arch --cache-from "type=local,src=$(CACHE_DIR)" --build-arg  BUILDKIT_INLINE_CACHE=1 --target=$$target -t $(CACHE_ID)/openlane-$$build -f Dockerfile --progress plain --push ..  2>&1 | tee ../logs/docker/$*.build.txt
 
 clean-cache:
 	@rm -rf $(CACHE_DIR)
