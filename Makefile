@@ -21,8 +21,8 @@ STD_CELL_LIBRARY ?= sky130_fd_sc_hd
 SPECIAL_VOLTAGE_LIBRARY ?= sky130_fd_sc_hvl
 IO_LIBRARY ?= sky130_fd_io
 
-CACHE_DOCKER_ID ?= efabless
-DOCKER_ID ?= $(CACHE_DOCKER_ID)
+CACHE_ID ?= efabless
+DOCKER_ID ?= $(CACHE_ID)
 IMAGE_NAME ?= $(DOCKER_ID)/openlane:rc7
 BUILD_ARCH ?= linux/amd64,linux/arm64
 
@@ -34,7 +34,7 @@ PRINT_REM_DESIGNS_TIME ?= 0
 SKYWATER_COMMIT ?= f6f76f3dc99526c6fc2cfede19b5b1227d4ebde7
 OPEN_PDKS_COMMIT ?= ec43817ed9f58ff83c9d260ce981818023cb6d77
 
-export CACHE_DOCKER_ID DOCKER_ID IMAGE_NAME BUILD_ARCH
+export CACHE_ID DOCKER_ID IMAGE_NAME BUILD_ARCH
 
 ifndef PDK_ROOT
 $(error PDK_ROOT is undefined, please export it before running make)
