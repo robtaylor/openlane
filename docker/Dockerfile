@@ -60,6 +60,7 @@ RUN yum -y install \
         tk \
         tk-devel \
         wget \
+        which \
         zlib-devel
 RUN yum -y clean all
 
@@ -402,7 +403,7 @@ RUN /stamp.sh yosys
 FROM base AS klayout
 
 # install klayout
-RUN yum install -y which qt5-devel
+RUN yum install -y qt5-devel
 RUN git clone https://github.com/KLayout/klayout.git && \
     cd klayout && \
     git checkout v0.26.9-2
