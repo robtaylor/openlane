@@ -60,6 +60,8 @@ push-all-message:
 	@echo "Pushing tools for $(HOST_ARCH)"
 endif
 
+SHELL=/bin/bash -o pipefail
+
 build-all: build-all-message $(TOOL_BUILD_TARGETS)
 push-all: push-all-message $(TOOL_PUSH_TARGETS)
 
@@ -73,7 +75,7 @@ TOOL_CACHE := $(foreach tag,$(TOOL_TAGS),--cache-from=$(tag))
 openlane:
 	@echo "Building $(IMAGE_NAME) for $(MULTIARCH)"
 	@mkdir -p ../logs/docker
-	docker buildx build --push --platform $(MULTIARCH) -t $(IMAGE_NAME) $(TOOL_CACHE) --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS)  --progress plain . 2>&1 | tee ../logs/docker/openlane.build.txt
+	docker buildx build --push --platform $(MULTIARCH) -t $(IMAGE_NAME) $(TOOL_CACHE) --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS) -f Dockerfile --progress plain .. 2>&1 | tee ../logs/docker/openlane.build.txt
 
 .PHONY:
 docker-builder:
