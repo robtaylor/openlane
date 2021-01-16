@@ -93,7 +93,7 @@ RUN tar -xf /boost_1_72_0.tar.bz2 && \
 FROM base as antmicro_yosys
 RUN git clone https://github.com/antmicro/yosys yosys && \
     cd yosys && \
-     && git checkout fe58e937ef87fdb157dd89c365bb6a570fe616ea
+    git checkout fe58e937ef87fdb157dd89c365bb6a570fe616ea
 
 WORKDIR yosys
 RUN make PREFIX=/build/antmicro config-gcc && \
