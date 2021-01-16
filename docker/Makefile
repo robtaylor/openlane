@@ -51,7 +51,7 @@ else
 TOOL_BUILD_TARGETS := $(foreach tool,$(TOOLS),build-$(tool)-$(HOST_ARCH))
 TOOL_PUSH_TARGETS := $(foreach tool,$(TOOLS),push-$(tool)-$(HOST_ARCH))
 MULTIARCH = linux/$(HOST_ARCH)
-TOOL_TAGS := $(foreach tool,$(TOOLS),%(CACHE_ID)/openlane-$(tool)-$(HOST_ARCH))
+TOOL_TAGS := $(foreach tool,$(TOOLS),$(CACHE_ID)/openlane-$(tool)-$(HOST_ARCH))
 
 build-all-message:
 	@echo "Building tools for $(HOST_ARCH)"
@@ -67,11 +67,13 @@ push-all: push-all-message $(TOOL_PUSH_TARGETS)
 cache: build-all push-all
 
 
+TOOL_CACHE := $(foreach tag,$(TOOL_TAGS),--cache-from=$(tag))
+
 .PHONY: openlane
 openlane:
 	@echo "Building $(IMAGE_NAME) for $(MULTIARCH)"
 	@mkdir -p ../logs/docker
-	docker buildx build --push --platform $(MULTIARCH) -t $(IMAGE_NAME) $(TOOL_BUILD_TARGETS) --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS)  --progress plain . 2>&1 | tee ../logs/docker/openlane.build.txt
+	docker buildx build --push --platform $(MULTIARCH) -t $(IMAGE_NAME) $(TOOL_CACHE) --build-arg BUILDKIT_INLINE_CACHE=1 $(BUILDX_OPTIONS)  --progress plain . 2>&1 | tee ../logs/docker/openlane.build.txt
 
 .PHONY:
 docker-builder:
