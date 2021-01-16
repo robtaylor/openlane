@@ -73,7 +73,7 @@ RUN wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.
 RUN tar -xf /boost_1_72_0.tar.bz2 && \
     cd boost_1_72_0 && \
     ./bootstrap.sh && \
-    ./b2 install --with-iostreams --with-test link=shared -j $(nproc) && \
+    ./b2 install --with-iostreams --with-test --with-system --with-filesystem --with-program_options --link=shared -j $(nproc) && \
     cd .. && \
     rm -rf boost_1_72.0
 
@@ -93,7 +93,7 @@ RUN tar -xf /boost_1_72_0.tar.bz2 && \
 FROM base as antmicro_yosys
 RUN git clone https://github.com/antmicro/yosys yosys && \
     cd yosys && \
-     && \git checkout fe58e937ef87fdb157dd89c365bb6a570fe616ea
+     && git checkout fe58e937ef87fdb157dd89c365bb6a570fe616ea
 
 WORKDIR yosys
 RUN make PREFIX=/build/antmicro config-gcc && \
@@ -126,6 +126,7 @@ RUN git clone https://github.com/ax3ghazy/cu-gr cugr_12012021 \
 
 WORKDIR cugr_12012021
 
+RUN touch foo-$(date -Iseconds)
 RUN python3 scripts/build.py -o release --cmake_options="-DBoost_NO_BOOST_CMAKE=ON"
 
 RUN mkdir -p /build/bin/ && \
@@ -398,9 +399,10 @@ RUN /stamp.sh yosys
 
 
 ##################### klayout #######################
+FROM base AS klayout
 
 # install klayout
-RUN yum install -y which
+RUN yum install -y which qt5-devel
 RUN git clone https://github.com/KLayout/klayout.git && \
     cd klayout && \
     git checkout v0.26.9-2
@@ -431,6 +433,7 @@ COPY --from=vlog2verilog    /build/* /
 COPY --from=openphysyn      /build/* /
 COPY --from=cvc             /build/* /
 COPY --from=cugr            /build/* /
+COPY --from=klayout         /build/* /
 
 
 ##################### openlane #######################
