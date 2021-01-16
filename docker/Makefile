@@ -25,7 +25,7 @@ CACHE_DIR = $(ROOT_DIR)/docker-cache
 
 ifeq ($(HOST_ARCH),x86_64)
   HOST_ARCH = amd64
-endif 
+endif
 
 include comma-seperate.mk
 
