@@ -35,7 +35,7 @@ default: openlane
 
 .PHONY: build-all-message push-all-message
 
-ifdef CROSS_COMPILE
+ifdef CROSS_BUILD
 TOOL_BUILD_TARGETS := $(foreach arch,$(TARGET_ARCHS),$(foreach tool,$(TOOLS),build-$(tool)-$(arch)))
 TOOL_PUSH_TARGETS := $(foreach arch,$(TARGET_ARCHS),$(foreach tool,$(TOOLS),push-$(tool)-$(arch)))
 MULTIARCH = $(call comma-separate,$(foreach arch,$(TARGET_ARCHS),linux/$(arch)))
