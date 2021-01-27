@@ -265,6 +265,9 @@ WORKDIR src/OpenDB
 RUN mkdir build && mkdir -p /build/version && mkdir install
 RUN cd build && cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install .. && make -j$(nproc) opendbpy
 RUN cp -r build/src/swig/python /build/OpenDB_python
+RUN cd /build/OpenDB_python && \
+    python3 setup.py install --prefix=/build && \
+    rm -rf /build/OpenDB_python
 WORKDIR /OpenROAD_23112020/
 
 RUN /stamp.sh openroad_app
@@ -410,7 +413,7 @@ RUN git clone https://github.com/KLayout/klayout.git && \
 
 WORKDIR klayout
 RUN mkdir -p /build/lib/ /build/bin
-RUN ./build.sh -rpath /build/lib/ -bin /build/bin
+RUN ./build.sh -rpath /usr/local/lib/ -bin /build/bin
 RUN mv /build/bin/lib*.so* /build/lib
 
 RUN /stamp.sh klayout
@@ -419,22 +422,39 @@ RUN /stamp.sh klayout
 ############## combined tools image #################
 FROM base AS tools
 
-#TOOLS = replace opendp route opensta yosys antmicro_yosys magic openroad_app padring netgen vlog2verilog openphysyn cvc
-COPY --from=replace         /build/* /
-COPY --from=opendp          /build/* /
-COPY --from=route_14        /build/* /
-COPY --from=opensta         /build/* /
-COPY --from=yosys           /build/* /
-COPY --from=antmicro_yosys  /build/* /
-COPY --from=magic           /build/* /
-COPY --from=openroad_app    /build/* /
-COPY --from=padring         /build/* /
-COPY --from=netgen          /build/* /
-COPY --from=vlog2verilog    /build/* /
-COPY --from=openphysyn      /build/* /
-COPY --from=cvc             /build/* /
-COPY --from=cugr            /build/* /
-COPY --from=klayout         /build/* /
+RUN yum -y install stow
+RUN mkdir -p /usr/local/stow
+WORKDIR /usr/local/stow
+COPY --from=replace         /build /usr/local/stow/replace
+RUN stow --override='.*' replace
+COPY --from=opendp          /build /usr/local/stow/opendp
+RUN stow --override='.*' opendp
+COPY --from=route_14        /build /usr/local/stow/route_14
+RUN stow --override='.*' route_14
+COPY --from=opensta         /build /usr/local/stow/opensta
+RUN stow --override='.*' opensta
+COPY --from=yosys           /build /usr/local/stow/yosys
+RUN stow --override='.*' yosys
+COPY --from=antmicro_yosys  /build /usr/local/stow/antmicro_yosys
+RUN stow --override='.*' antmicro_yosys
+COPY --from=magic           /build /usr/local/stow/magic
+RUN stow --override='.*' magic
+COPY --from=openroad_app    /build /usr/local/stow/openroad_app
+RUN stow --override='.*' openroad_app
+COPY --from=padring         /build /usr/local/stow/padring
+RUN stow --override='.*' padring
+COPY --from=netgen          /build /usr/local/stow/netgen
+RUN stow --override='.*' netgen
+COPY --from=vlog2verilog    /build /usr/local/stow/vlog2verilog
+RUN stow --override='.*' vlog2verilog
+COPY --from=openphysyn      /build /usr/local/stow/openphysyn
+RUN stow --override='.*' openphysyn
+COPY --from=cvc             /build /usr/local/stow/cvc
+RUN stow --override='.*' cvc
+COPY --from=cugr            /build /usr/local/stow/cugr
+RUN stow --override='.*' cugr
+COPY --from=klayout         /build /usr/local/stow/klayout
+RUN stow --override='.*' klayout
 
 
 ##################### openlane #######################
@@ -445,21 +465,23 @@ RUN yum install -y \
         Xvfb \
         libXext \
         libXft \
-        libgomp \
+        libjpeg-devel \
+        libgomp-8.3.1-5.1.el8 \
         mesa-libGLU-devel
 RUN yum -y clean all
 
-RUN pip3 install --no-cache-dir Cython & \
-    pip3 install --no-cache-dir numpy==1.19.3 & \
-    pip3 install --no-cache-dir \
-        matplotlib \
-        jinja2 \
-        pandas \
+RUN pip3 install --no-cache-dir Cython
+RUN pip3 install --no-cache-dir numpy==1.19.3
+RUN pip3 install --no-cache-dir \
         install \
+        jinja2 \
+        matplotlib \
+        pandas \
+        tcllib \
         XlsxWriter
 
 ENV OPENLANE_ROOT=/openLANE_flow
-ENV OPENROAD=/build/
+ENV OPENROAD=/build
 
 ENV PATH=$OPENLANE_ROOT:$OPENLANE_ROOT/scripts:$OPENROAD/bin:$OPENROAD/bin/Linux-x86_64:$OPENROAD/pdn/scripts:$PATH
 ENV LD_LIBRARY_PATH=$OPENROAD/lib:$LD_LIBRARY_PATH
@@ -468,11 +490,6 @@ ENV MANPATH=$OPENROAD/share/man:$MANPATH
 COPY docker/tclshrc /.tclshrc
 RUN cp /.tclshrc /root
 COPY . $OPENLANE_ROOT
-
-# install opendb python
-RUN cd $OPENROAD/OpenDB_python/ && \
-    python3 setup.py install && \
-    rm -rf $OPENROAD/OpenDB_python
 
 WORKDIR $OPENLANE_ROOT
 
