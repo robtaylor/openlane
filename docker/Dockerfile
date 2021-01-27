@@ -400,7 +400,7 @@ RUN make PREFIX=/build config-gcc \
  && make PREFIX=/build install
 
 RUN /stamp.sh yosys
-
+RUN ls -lR /build
 
 ##################### klayout #######################
 FROM base AS klayout
@@ -467,7 +467,9 @@ RUN yum install -y \
         libXft \
         libjpeg-devel \
         libgomp-8.3.1-5.1.el8 \
-        mesa-libGLU-devel
+        mesa-libGLU-devel \
+        tcllib
+
 RUN yum -y clean all
 
 RUN pip3 install --no-cache-dir Cython
@@ -477,7 +479,6 @@ RUN pip3 install --no-cache-dir \
         jinja2 \
         matplotlib \
         pandas \
-        tcllib \
         XlsxWriter
 
 ENV OPENLANE_ROOT=/openLANE_flow
@@ -488,7 +489,7 @@ ENV LD_LIBRARY_PATH=$OPENROAD/lib:$LD_LIBRARY_PATH
 ENV MANPATH=$OPENROAD/share/man:$MANPATH
 
 COPY docker/tclshrc /.tclshrc
-RUN cp /.tclshrc /root
+COPY docker/tclshrc /root/.tclshrc
 COPY . $OPENLANE_ROOT
 
 WORKDIR $OPENLANE_ROOT
