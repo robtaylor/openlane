@@ -258,7 +258,7 @@ RUN git apply ignore_obs_outside.patch
 RUN mkdir build && mkdir -p /build/version && mkdir install
 RUN cd build && cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install .. && make -j$(nproc)
 RUN cd build && make install
-RUN cp -r build/install/* /build/
+RUN cp -r build/install/bin /build/
 
 # OpenDB Python interface
 WORKDIR src/OpenDB
