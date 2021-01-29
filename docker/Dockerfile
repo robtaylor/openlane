@@ -224,6 +224,8 @@ RUN /stamp.sh openphysyn
 ##################### OpenROAD #######################
 FROM boost_base AS openroad_app
 
+RUN yum -y install spdlog-devel
+
 RUN git clone https://gitlab.com/libeigen/eigen.git \
     && cd eigen \
     && mkdir build \
@@ -239,7 +241,7 @@ RUN cd / && wget http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz \
 
 RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD OpenROAD_23112020
 WORKDIR /OpenROAD_23112020/
-RUN git checkout d03ebfc2447b674583b77d94d0891e4c3bc6b1a2 && \
+RUN git checkout 1415572a73d43dfc91ba4501170fe6a245729e87 && \
     git submodule update --init --recursive
 
 COPY docker/openroad_app/rails.patch /OpenROAD_23112020/
@@ -477,6 +479,7 @@ RUN pip3 install --no-cache-dir numpy==1.19.3
 RUN pip3 install --no-cache-dir \
         install \
         jinja2 \
+        spdlog \
         matplotlib \
         pandas \
         XlsxWriter
