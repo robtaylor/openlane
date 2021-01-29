@@ -170,10 +170,10 @@ RUN /stamp.sh drcu
 ############### Oh oh oh, its Magic ################
 FROM base AS magic
 RUN yum install -y mesa-libGLU-devel cairo-devel
-RUN git clone git://opencircuitdesign.com/magic magic_18122020
+RUN git clone git://opencircuitdesign.com/magic magic
 
-WORKDIR magic_18122020
-RUN git checkout a31bd9f00363c21367b60f482537ce3dd49524ce 
+WORKDIR magic
+RUN git checkout cf54d146d1e085e122eba990cf51e6c2f133d433
 
 RUN ./configure --prefix=/build && \
     make -j$(nproc) && \
@@ -184,9 +184,9 @@ RUN /stamp.sh magic
 
 ##################### Netgen #######################
 FROM base AS netgen
-RUN git clone git://opencircuitdesign.com/netgen netgen_15122020
-WORKDIR netgen_15122020
-RUN git checkout 69780aa0483e9fff320a51c88a927551f6f3c765
+RUN git clone git://opencircuitdesign.com/netgen netgen
+WORKDIR netgen
+RUN git checkout a034fc16d6eb1080e4ee5de0eabf09970a08c74d
 
 RUN ./configure --prefix=/build
 RUN make clean && \
@@ -258,21 +258,21 @@ RUN cd / && wget http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz \
     && cmake -B build . \
     && cmake --build build -j $(nproc) --target install
 
-RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD OpenROAD_23112020
-WORKDIR /OpenROAD_23112020/
+RUN git clone https://github.com/The-OpenROAD-Project/OpenROAD OpenROAD
+WORKDIR /OpenROAD/
 RUN git checkout 1415572a73d43dfc91ba4501170fe6a245729e87 && \
     git submodule update --init --recursive
 
-COPY docker/openroad_app/rails.patch /OpenROAD_23112020/
+COPY docker/openroad_app/rails.patch /OpenROAD/
 RUN git apply rails.patch
 
-COPY docker/openroad_app/setup_local.patch /OpenROAD_23112020/src/OpenDB/src/swig/python
-RUN cd /OpenROAD_23112020/src/OpenDB/src/swig/python && git apply setup_local.patch
+COPY docker/openroad_app/setup_local.patch /OpenROAD/src/OpenDB/src/swig/python
+RUN cd /OpenROAD/src/OpenDB/src/swig/python && git apply setup_local.patch
 
-COPY docker/openroad_app/pdngen_export_subst.patch /OpenROAD_23112020/
+COPY docker/openroad_app/pdngen_export_subst.patch /OpenROAD/
 RUN git apply pdngen_export_subst.patch
 
-COPY docker/openroad_app/ignore_obs_outside.patch /OpenROAD_23112020/
+COPY docker/openroad_app/ignore_obs_outside.patch /OpenROAD/
 RUN git apply ignore_obs_outside.patch
 
 # Build OpenROAD
@@ -289,7 +289,7 @@ RUN cp -r build/src/swig/python /build/OpenDB_python
 RUN cd /build/OpenDB_python && \
     python3 setup.py install --prefix=/build && \
     rm -rf /build/OpenDB_python
-WORKDIR /OpenROAD_23112020/
+WORKDIR /OpenROAD/
 
 RUN /stamp.sh openroad_app
 
@@ -372,15 +372,15 @@ RUN /stamp.sh replace
 
 
 ##################### TritonRoute #######################
-FROM boost_base as route_14
+FROM boost_base as route
 
-RUN git clone https://github.com/The-OpenROAD-Project/TritonRoute.git TritonRoute_26102020 \
-    && cd TritonRoute_26102020 \
+RUN git clone https://github.com/The-OpenROAD-Project/TritonRoute.git TritonRoute \
+    && cd TritonRoute\
     && git checkout a639a8b8c99fb078057d8449aa57333952b06309
 
-RUN mkdir TritonRoute_26102020/build
+RUN mkdir TritonRoute/build
 
-WORKDIR TritonRoute_26102020/build
+WORKDIR TritonRoute/build
 
 RUN cmake ../ && \
     make && \
@@ -388,7 +388,7 @@ RUN cmake ../ && \
     cp TritonRoute /build/bin/TritonRoute
 
 
-RUN /stamp.sh route_14
+RUN /stamp.sh route
 
 
 ##################### vlog2Verilog #######################
@@ -450,8 +450,8 @@ COPY --from=replace         /build /usr/local/stow/replace
 RUN stow --override='.*' replace
 COPY --from=opendp          /build /usr/local/stow/opendp
 RUN stow --override='.*' opendp
-COPY --from=route_14        /build /usr/local/stow/route_14
-RUN stow --override='.*' route_14
+COPY --from=route           /build /usr/local/stow/route
+RUN stow --override='.*' route
 COPY --from=opensta         /build /usr/local/stow/opensta
 RUN stow --override='.*' opensta
 COPY --from=yosys           /build /usr/local/stow/yosys
@@ -476,6 +476,8 @@ COPY --from=cugr            /build /usr/local/stow/cugr
 RUN stow --override='.*' cugr
 COPY --from=klayout         /build /usr/local/stow/klayout
 RUN stow --override='.*' klayout
+COPY --from=cugr            /build /usr/local/stow/drcu
+RUN stow --override='.*' drcu
 
 
 ##################### openlane #######################
@@ -489,6 +491,7 @@ RUN yum install -y \
         libjpeg-devel \
         libgomp-8.3.1-5.1.el8 \
         mesa-libGLU-devel \
+        spdlog \
         tcllib
 
 RUN yum -y clean all
@@ -498,7 +501,6 @@ RUN pip3 install --no-cache-dir numpy==1.19.3
 RUN pip3 install --no-cache-dir \
         install \
         jinja2 \
-        spdlog \
         matplotlib \
         pandas \
         XlsxWriter
