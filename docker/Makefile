@@ -29,7 +29,7 @@ endif
 
 include comma-seperate.mk
 
-TOOLS = base boost_base replace opendp route_14 opensta yosys antmicro_yosys magic openroad_app padring netgen vlog2verilog openphysyn cvc cugr klayout
+TOOLS = base boost_base replace opendp route_14 opensta yosys antmicro_yosys magic openroad_app padring netgen vlog2verilog openphysyn cvc cugr klayout drcu
 
 default: openlane
 

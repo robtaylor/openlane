@@ -104,8 +104,8 @@ RUN make PREFIX=/build/antmicro config-gcc && \
 RUN /stamp.sh antmicro_yosys
 
 
-####################### CUGR ########################
-FROM boost_base AS cugr
+####################### static libdef, liblef and spdlog ########################
+FROM boost_base AS deflef
 RUN yum -y install vim-common glibc-static spdlog-devel
 
 #Dependencies - libdef, liblef
@@ -121,13 +121,14 @@ RUN cd build && \
     make -j $(nproc) && \
     make install 
 
+####################### CUGR ########################
+FROM deflef as cugr
 RUN git clone https://github.com/ax3ghazy/cu-gr cugr_12012021 \
        && cd cugr_12012021 \
        && git checkout 1632b4b450cbd3e5b6bdc9bf92c96cadde6a01b9
 
 WORKDIR cugr_12012021
 
-RUN touch foo-$(date -Iseconds)
 RUN python3 scripts/build.py -o release --cmake_options="-DBoost_NO_BOOST_CMAKE=ON"
 
 RUN mkdir -p /build/bin/ && \
@@ -146,6 +147,24 @@ RUN tar -xvf cvc-1.0.0.tar.gz
 WORKDIR cvc-1.0.0
 RUN ./configure --disable-nls --prefix=/build && \
     make install
+
+####################### DRCU ########################
+FROM deflef AS drcu
+
+RUN yum -y install glibc-static spdlog-devel
+
+RUN git clone https://github.com/cuhk-eda/dr-cu drcu_18012021
+
+WORKDIR drcu_18012021
+
+RUN git checkout 427b4a4f03bb98d8a78b1712fe9e52cfb83a8347
+
+RUN python3 scripts/build.py -o release
+
+RUN mkdir -p /build/bin/ && \
+    cp run/ispd19dr /build/bin/drcu
+
+RUN /stamp.sh drcu
 
 
 ############### Oh oh oh, its Magic ################
