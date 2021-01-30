@@ -99,7 +99,7 @@ $(TOOL_PUSH_TARGETS): push-% : Dockerfile docker-builder
 	build="$*" ; \
 	target="$${build%-*}" ; \
 	arch="$${build#*-}" ; \
-	docker buildx build --platform linux/$$arch --cache-from "type=local,src=$(CACHE_DIR)" --build-arg  BUILDKIT_INLINE_CACHE=1 --target=$$target -t $(CACHE_ID)/openlane-$$build -f Dockerfile --progress plain --push ..  2>&1 | tee ../logs/docker/$*.build.txt
+	docker buildx build --platform linux/$$arch --cache-from "type=registry,ref=$(CACHE_ID)/openlane-$$build" --cache-from "type=local,src=$(CACHE_DIR)" --build-arg  BUILDKIT_INLINE_CACHE=1 --target=$$target -t $(CACHE_ID)/openlane-$$build -f Dockerfile --progress plain --push ..  2>&1 | tee ../logs/docker/$*.build.txt
 
 clean-cache:
 	@rm -rf $(CACHE_DIR)

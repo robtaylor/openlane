@@ -25,7 +25,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: build updated image
       run: |
-        make PDK_ROOT=$(pwd)/pdks CACHE_ID=${{ secrets.DOCKER_HUB_USERNAME }} docker-cache
+        make PDK_ROOT=$(pwd)/pdks CACHE_ID=${{ secrets.DOCKER_HUB_USERNAME }} -C docker push-all
         make PDK_ROOT=$(pwd)/pdks CACHE_ID=${{ secrets.DOCKER_HUB_USERNAME }} openlane
     - name: Clean
       run: |
