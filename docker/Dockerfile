@@ -496,7 +496,8 @@ RUN yum install -y \
         libgomp-8.3.1-5.1.el8 \
         mesa-libGLU-devel \
         spdlog \
-        tcllib
+        tcllib \
+        patch
 
 RUN yum -y clean all
 
