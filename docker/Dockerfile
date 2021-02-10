@@ -140,7 +140,11 @@ RUN /stamp.sh cugr
 ####################### CVC ########################
 FROM base AS cvc
 
-RUN pip3 install --no-cache-dir pyinstaller
+RUN git clone https://github.com/pyinstaller/pyinstaller.git pyinstaller
+WORKDIR pyinstaller/bootloader
+RUN python3 ./waf all
+WORKDIR /pyinstaller
+RUN python3 setup.py install
 
 COPY docker/cvc/cvc-1.0.0.tar.gz cvc-1.0.0.tar.gz
 RUN tar -xvf cvc-1.0.0.tar.gz
