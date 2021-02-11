@@ -497,7 +497,11 @@ RUN yum install -y \
         mesa-libGLU-devel \
         spdlog \
         tcllib \
-        patch
+        patch \
+        qt5-qttools-libs-designer \
+        qt5-qtmultimedia \
+        qt5-qtsvg \
+        qt5-qtxmlpatterns
 
 RUN yum -y clean all
 
